@@ -12,14 +12,17 @@ public class Enemy : MonoBehaviour
     public float loot = 1f;
 
     public bool alive = true;
-
+    bool dazed = false;
 
     public delegate void EnemyEvent(Enemy e, params string [] info);
     public static event EnemyEvent OnDeath;
 
     SpriteRenderer sprite;
 
-    
+    Vector3 net_v = new Vector3(); // our net velocity, right now
+    Vector3 frame_a = new Vector3(); // the acceleration we undergo this frame.
+    float friction = 1f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -29,22 +32,40 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+ 
+    }
 
-
+    private void FixedUpdate()
+    {
         if(alive)
+            UpdateMovement();
+    }
+
+    void UpdateMovement()
+    {
+        net_v += frame_a; // instantaneous acceleration
+        net_v -= net_v.normalized * friction; // friction opposite of our direction of motion
+        if(dazed && net_v.magnitude < 0.5f)
         {
-            //move toward player base
+            net_v = Vector3.zero;
+            dazed = false;
+        }
+        else if(!dazed) // if we came to a stop, wait a frame before we get going again.
+        {
 
-            //right now I'm just gonna have them move in a straight line because I'm lazy
+            if (net_v.magnitude < movespeed) net_v += (Vector3.right * recovery);
+            else if (net_v.magnitude > movespeed) net_v = (Vector3.right * movespeed);
+        }
 
-            transform.position += (Vector3.right * currentSpeed) * Time.deltaTime;
+        transform.position += net_v * Time.deltaTime;
+        frame_a = Vector3.zero;
+    }
 
-            // accelerate the enemy up to their movespeed, so hits can stagger them if applicable
-            // adds more depth to enemy types. Some fast enemies may move really quickly but only once they get up to speed, and are thus more powerful in groups but easily handled
-            // on their own. Other enemies may move more slowly, but aren't staggered at all and need consistent firepower to bring them down.
-            if (currentSpeed < movespeed) currentSpeed += recovery * Time.deltaTime;
-            else if (currentSpeed > movespeed) currentSpeed = movespeed;
-        }   
+    public void Shove(Vector3 from_point, float force)
+    {
+        Debug.Log("SHOVE");
+        frame_a = (transform.position - from_point).normalized * force;
+        dazed = true;
     }
 
     public void HitBy(Tower shooter)
@@ -61,6 +82,7 @@ public class Enemy : MonoBehaviour
         }
         else
         {
+            Shove(shooter.transform.position, 2f);
             if(visualdamage != null)
             {
                 StopCoroutine(visualdamage);
