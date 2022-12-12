@@ -132,6 +132,7 @@ MonoBehaviour:
   movespeed: 3
   recovery: 3
   loot: 1
+  type: 6
   alive: 1
   hitFadeDuration: 1
   normal: {r: 1, g: 1, b: 1, a: 1}

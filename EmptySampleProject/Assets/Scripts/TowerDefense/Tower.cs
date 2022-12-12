@@ -1,13 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Tower : MonoBehaviour
 {
+    [Flags]
+    public enum Type
+    {
+        NONE,
+        FIRE,
+        HOLY,
+        WATER = 4
+    }
+
+
     public float cost = 10f;
     public float p_velocity = 10f;
     public float p_damage = 3f;
-    
+
+    public Type type;
+
     [Tooltip("The number of shots this turret can fire within one minute if firing continuously")]
     public int fire_rate = 300;
 
@@ -30,6 +43,11 @@ public class Tower : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        
+
+
+
         if (!shooting)
         {
             CheckForEnemies();
@@ -43,6 +61,12 @@ public class Tower : MonoBehaviour
         {
             Shoot();
         }
+    }
+
+    public bool HasFlag(Type flag)
+    {
+        if ((type & flag) != Type.NONE) return true;
+        return false;
     }
 
     void Shoot()

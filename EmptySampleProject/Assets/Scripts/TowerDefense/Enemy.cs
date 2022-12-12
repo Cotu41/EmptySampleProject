@@ -1,15 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Enemy : MonoBehaviour
 {
+    [Flags]
+    public enum Type
+    {
+        NONE,
+        ICE,
+        UNDEAD,
+        FIRE = 4
+    }
+
+
     public float health = 100f;
     public float movespeed = 6f;
     float currentSpeed = 0f;
 
     public float recovery = 3f;
     public float loot = 1f;
+
+    public Type type;
 
     public bool alive = true;
     bool dazed = false;
@@ -22,6 +35,8 @@ public class Enemy : MonoBehaviour
     Vector3 net_v = new Vector3(); // our net velocity, right now
     Vector3 frame_a = new Vector3(); // the acceleration we undergo this frame.
     float friction = 1f;
+
+    
 
     // Start is called before the first frame update
     void Start()
@@ -68,10 +83,57 @@ public class Enemy : MonoBehaviour
         dazed = true;
     }
 
+    public bool HasFlag(Type flag)
+    {
+        if ((type & flag) != Type.NONE) return true;
+        return false;
+    }
+
+
     public void HitBy(Tower shooter)
     {
 
-        health -= shooter.p_damage;
+        //health -= shooter.p_damage;
+
+
+       
+    
+        if(HasFlag(Type.FIRE))
+        {
+            if(shooter.HasFlag(Tower.Type.WATER))
+            {
+                health -= shooter.p_damage * 0.25f; // bonus damage
+            }
+            
+            if(shooter.HasFlag(Tower.Type.FIRE))
+            {
+                health += shooter.p_damage; // heal!
+            }    
+        }
+
+        if(HasFlag(Type.UNDEAD))
+        {
+            if(shooter.HasFlag(Tower.Type.HOLY))
+            {
+                health -= shooter.p_damage * 0.25f;
+            }
+        }
+
+        if(HasFlag(Type.ICE))
+        {
+            if(shooter.HasFlag(Tower.Type.FIRE))
+            {
+                health -= shooter.p_damage * 0.25f;
+            }
+
+            if(shooter.HasFlag(Tower.Type.WATER))
+            {
+                health += shooter.p_damage * 0.1f; // heal, but only a little
+            }
+        }
+
+
+        health -= shooter.p_damage; // deal normal damage
         currentSpeed = 0f;
         if (health <= 0)
         {
